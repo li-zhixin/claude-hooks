@@ -2,7 +2,7 @@
 
 English | [中文](README-CN.md)
 
-PreToolUse hooks for Claude Code on Windows. These hooks intercept Bash commands and file writes before execution, automatically fixing common Git Bash/MSYS2 mistakes and enforcing code style preferences. No more `> nul` creating undeletable files, no more `python3` hitting the Windows Store alias, no more `dir /b` silently treating a flag as a path, no more emoji in code.
+PreToolUse hooks for Claude Code on Windows. These hooks intercept Bash commands and file writes before execution, automatically fixing common Git Bash/MSYS2 mistakes and enforcing code style preferences. No more `> nul` creating undeletable files, no more `python3` hitting the Windows Store alias, no more `dir /b` silently treating a flag as a path, no more emoji in code, no more POSIX paths breaking Read/Edit tools.
 
 ## Fixes
 
@@ -22,6 +22,7 @@ PreToolUse hooks for Claude Code on Windows. These hooks intercept Bash commands
 | `dir /b` in bash | `dir /b path` | Auto-fix | Rewrite to `ls -1 path` |
 | `dir /flag` in pwsh | `pwsh -Command "dir /b ..."` | Block | Suggest `Get-ChildItem` equivalent |
 | Emoji in files | Write/Edit with emoji | Block | Reject with message |
+| Tool path POSIX | `/c/Work/...` in Read/Write/Edit/Glob/Grep | Auto-fix | Rewrite to `C:\Work\...` |
 
 ## Installation
 
@@ -63,6 +64,10 @@ Add to `~/.claude/settings.json`:
       },
       {
         "matcher": "Write|Edit",
+        "hooks": [{"type": "command", "command": "claude-hooks-win"}]
+      },
+      {
+        "matcher": "Read|Write|Edit|Glob|Grep",
         "hooks": [{"type": "command", "command": "claude-hooks-win"}]
       }
     ]
@@ -129,6 +134,7 @@ Then edit `config.json` to toggle checks. Each key is a check ID mapped to `true
 | `git_commit_generated` | Block "Generated with" in commits | off | block |
 | `git_commit_emoji` | Block emoji in commit messages | off | block |
 | `file_content_unicode` | Block emoji/unicode in file writes | off | block |
+| `tool_path_posix` | Rewrite `/c/...` to `C:\...` in Read/Write/Edit/Glob/Grep paths | on | auto-fix |
 
 Safety checks (default on) prevent real mistakes that break commands or create undeletable files. Style checks (default off) enforce preferences -- enable the ones you want.
 

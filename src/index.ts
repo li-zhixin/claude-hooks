@@ -5,6 +5,7 @@ import { join, resolve } from 'path';
 import { homedir } from 'os';
 import { runFixBashCommand } from './fix-bash-command';
 import { runCheckFileContent } from './check-file-content';
+import { runFixToolPaths } from './fix-tool-paths';
 
 // ---------------------------------------------------------------------------
 // Embedded templates (inlined at build time)
@@ -19,6 +20,10 @@ const SETTINGS_TEMPLATE = {
       },
       {
         matcher: 'Write|Edit',
+        hooks: [{ type: 'command', command: 'claude-hooks-win' }],
+      },
+      {
+        matcher: 'Read|Write|Edit|Glob|Grep',
         hooks: [{ type: 'command', command: 'claude-hooks-win' }],
       },
     ],
@@ -73,6 +78,9 @@ const CONFIG_SAMPLE = {
 
   _comment_file_content_unicode: 'Block: Write/Edit with emoji or decorative unicode (box drawing, dingbats)',
   file_content_unicode: false,
+
+  _comment_tool_path_posix: 'Auto-fix: /c/Users/... -> C:\\Users\\... in Read/Write/Edit/Glob/Grep path parameters',
+  tool_path_posix: true,
 };
 
 // ---------------------------------------------------------------------------
@@ -189,7 +197,10 @@ function runHook(): void {
   if (toolName === 'Bash') {
     runFixBashCommand(inputData);
   } else if (toolName === 'Write' || toolName === 'Edit') {
+    runFixToolPaths(inputData);
     runCheckFileContent(inputData);
+  } else if (toolName === 'Read' || toolName === 'Glob' || toolName === 'Grep') {
+    runFixToolPaths(inputData);
   }
 
   process.exit(0);

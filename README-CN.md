@@ -2,7 +2,7 @@
 
 [English](README.md) | 中文
 
-适用于 Windows 上 Claude Code 的 PreToolUse 钩子。这些钩子在命令执行前拦截 Bash 命令和文件写入，自动修复常见的 Git Bash/MSYS2 错误并强制执行代码风格偏好。不再有 `> nul` 创建无法删除的文件，不再有 `python3` 触发 Windows 应用商店别名，不再有 `dir /b` 把参数当路径，不再有代码中的 emoji。
+适用于 Windows 上 Claude Code 的 PreToolUse 钩子。这些钩子在命令执行前拦截 Bash 命令和文件写入，自动修复常见的 Git Bash/MSYS2 错误并强制执行代码风格偏好。不再有 `> nul` 创建无法删除的文件，不再有 `python3` 触发 Windows 应用商店别名，不再有 `dir /b` 把参数当路径，不再有代码中的 emoji，不再有 POSIX 路径导致 Read/Edit 工具出错。
 
 ## 修复列表
 
@@ -22,6 +22,7 @@
 | bash 中的 `dir /b` | `dir /b path` | 自动修复 | 改写为 `ls -1 path` |
 | pwsh 中的 `dir /flag` | `pwsh -Command "dir /b ..."` | 拦截 | 建议使用 `Get-ChildItem` 等价命令 |
 | 文件中的 Emoji | Write/Edit 包含 emoji | 拦截 | 拒绝并提示 |
+| 工具路径 POSIX | Read/Write/Edit/Glob/Grep 中的 `/c/Work/...` | 自动修复 | 改写为 `C:\Work\...` |
 
 ## 安装
 
@@ -63,6 +64,10 @@ npx -y claude-hooks-win init --project .
       },
       {
         "matcher": "Write|Edit",
+        "hooks": [{"type": "command", "command": "claude-hooks-win"}]
+      },
+      {
+        "matcher": "Read|Write|Edit|Glob|Grep",
         "hooks": [{"type": "command", "command": "claude-hooks-win"}]
       }
     ]
@@ -129,6 +134,7 @@ cp ~/.claude/hooks/config.sample.json ~/.claude/hooks/config.json
 | `git_commit_generated` | 拦截提交中的 "Generated with" | 关闭 | 拦截 |
 | `git_commit_emoji` | 拦截提交信息中的 emoji | 关闭 | 拦截 |
 | `file_content_unicode` | 拦截文件写入中的 emoji/unicode | 关闭 | 拦截 |
+| `tool_path_posix` | 将 Read/Write/Edit/Glob/Grep 中的 `/c/...` 改写为 `C:\...` | 开启 | 自动修复 |
 
 安全检查（默认开启）防止真实错误——命令执行失败或创建无法删除的文件。风格检查（默认关闭）强制执行个人偏好——按需启用。
 
